@@ -1,0 +1,1158 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+<title>Sinek Tuzağı Kontrol — Yakamoz</title>
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#1f7a4d">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<link rel="apple-touch-icon" href="icon-192.png">
+<style>
+:root{
+  --bg:#fff; --surface:#f2f5f3; --line:#d9e0dc;
+  --ink:#16241f; --muted:#5f6f68;
+  --acc:#1f7a4d; --acc-soft:#e4f1ea;
+  --warn:#c07a12; --warn-soft:#fdf1dd;
+  --dan:#b3261e; --dan-soft:#fbe6e4;
+  --r:10px;
+}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+body{margin:0;background:var(--bg);color:var(--ink);
+  font-family:system-ui,-apple-system,"Segoe UI",Roboto,Arial,sans-serif;font-size:16px}
+header{position:sticky;top:0;z-index:20;background:var(--acc);color:#fff;padding:10px 14px;
+  display:flex;align-items:center;gap:10px}
+header h1{font-size:17px;margin:0;font-weight:600;flex:1}
+#net{font-size:12px;background:rgba(255,255,255,.18);padding:4px 8px;border-radius:20px}
+nav{display:flex;background:var(--surface);border-bottom:1px solid var(--line);position:sticky;top:44px;z-index:19}
+nav button{flex:1;padding:11px 2px;border:0;background:none;font-size:13px;color:var(--muted);
+  font-weight:600;border-bottom:3px solid transparent;position:relative}
+nav button.on{color:var(--acc);border-bottom-color:var(--acc);background:#fff}
+nav .rozet{position:absolute;top:5px;right:6px;background:var(--dan);color:#fff;
+  font-size:10px;padding:1px 5px;border-radius:10px}
+main{padding:12px 12px 90px}
+.bar{display:flex;gap:8px;align-items:center;margin-bottom:10px;flex-wrap:wrap}
+.stat{flex:1;min-width:84px;background:var(--surface);border-radius:var(--r);padding:8px 10px}
+.stat b{display:block;font-size:20px;line-height:1.2}
+.stat span{font-size:12px;color:var(--muted)}
+input,select,textarea,button{font-family:inherit;font-size:16px}
+.in{width:100%;padding:12px;border:1px solid var(--line);border-radius:var(--r);background:#fff}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:8px}
+.card{border:1px solid var(--line);border-left:5px solid var(--muted);border-radius:var(--r);
+  padding:10px;background:#fff;text-align:left;width:100%}
+.card b{display:block;font-size:16px}
+.card small{color:var(--muted);font-size:12px;display:block;margin-top:2px}
+.ok{border-left-color:var(--acc);background:var(--acc-soft)}
+.due{border-left-color:var(--warn);background:var(--warn-soft)}
+.late{border-left-color:var(--dan);background:var(--dan-soft)}
+.pas{border-left-color:var(--line);background:var(--surface);opacity:.7}
+.chip{display:inline-block;font-size:11px;font-weight:700;padding:3px 7px;border-radius:20px;
+  margin:3px 3px 0 0;background:#fff;border:1px solid var(--line);color:var(--muted)}
+.chip.d{background:var(--warn);color:#fff;border-color:var(--warn)}
+.chip.l{background:var(--dan);color:#fff;border-color:var(--dan)}
+.flag{color:var(--dan);font-weight:700;font-size:12px}
+.btn{width:100%;padding:15px;border:0;border-radius:var(--r);background:var(--acc);color:#fff;
+  font-weight:700;font-size:17px}
+.btn.sec{background:var(--surface);color:var(--ink);border:1px solid var(--line)}
+.btn.sm{padding:10px;font-size:14px}
+.btn:disabled{opacity:.5}
+.sheet{position:fixed;inset:0;background:#fff;z-index:40;overflow-y:auto;display:none}
+.sheet.on{display:block}
+.sheet .top{position:sticky;top:0;background:var(--acc);color:#fff;padding:12px 14px;
+  display:flex;align-items:center;gap:10px}
+.sheet .top b{flex:1;font-size:17px}
+.x{background:rgba(255,255,255,.2);border:0;color:#fff;border-radius:8px;padding:6px 12px;font-size:16px}
+.row{padding:12px 14px;border-bottom:1px solid var(--line)}
+.row>label{display:block;font-size:13px;color:var(--muted);margin-bottom:8px;font-weight:600}
+.row.vade{background:var(--warn-soft)}
+.row.disi{opacity:.55}
+.opt{display:flex;gap:8px}
+.opt button{flex:1;padding:13px 6px;border:1px solid var(--line);background:#fff;border-radius:var(--r);
+  font-size:15px;font-weight:600;color:var(--muted)}
+.opt button.sel{background:var(--acc);border-color:var(--acc);color:#fff}
+.opt button.sel.bad{background:var(--dan);border-color:var(--dan)}
+#foto{width:100%;border-radius:var(--r);margin-top:8px;display:none}
+.rec{border:1px solid var(--line);border-radius:var(--r);padding:10px;margin-bottom:8px;background:#fff}
+.rec.sor{border-left:5px solid var(--dan)}
+.rec .h{display:flex;justify-content:space-between;font-weight:700}
+.rec .m{font-size:13px;color:var(--muted);margin-top:4px;line-height:1.5}
+.rec img{width:100%;border-radius:8px;margin-top:8px}
+.aylar{display:grid;grid-template-columns:repeat(6,1fr);gap:4px;margin-top:6px}
+.aylar button{padding:9px 0;border:1px solid var(--line);background:#fff;border-radius:8px;
+  font-size:13px;font-weight:600;color:var(--muted)}
+.aylar button.on{background:var(--acc);border-color:var(--acc);color:#fff}
+.gorev{border:1px solid var(--line);border-radius:var(--r);padding:10px}
+.krokibox{position:relative;display:inline-block;width:100%;line-height:0}
+.krokibox img{width:100%;border-radius:var(--r);border:1px solid var(--line)}
+.nokta{position:absolute;transform:translate(-50%,-50%);width:30px;height:30px;border-radius:50%;
+  border:2px solid #fff;box-shadow:0 1px 4px rgba(0,0,0,.4);color:#fff;font-size:10px;font-weight:700;
+  display:flex;align-items:center;justify-content:center;line-height:1}
+.n-ok{background:var(--acc)} .n-due{background:var(--warn)}
+.n-late{background:var(--dan)} .n-pas{background:#8d9a94}
+.tip{font-size:13px;color:var(--muted);line-height:1.6;background:var(--surface);
+  padding:10px;border-radius:var(--r);margin-bottom:10px}
+.toast{position:fixed;left:50%;transform:translateX(-50%);bottom:24px;background:#16241f;color:#fff;
+  padding:12px 18px;border-radius:24px;z-index:60;font-size:15px;display:none;max-width:88%}
+table{width:100%;border-collapse:collapse;font-size:11px}
+th,td{border:1px solid #000;padding:3px}
+#cikti{display:none}
+.lbl{border:1px solid #000;padding:8px;text-align:center;break-inside:avoid}
+.lbl b{display:block;font-size:19px}
+.lbl small{font-size:11px}
+.lbl div{margin:4px auto}
+.qrs{display:grid;grid-template-columns:repeat(3,1fr);gap:6px}
+.fotolar{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:10px}
+.fotolar figure{margin:0;break-inside:avoid}
+.fotolar img{width:100%;border:1px solid #000}
+.fotolar figcaption{font-size:10px;text-align:center}
+@media print{
+  header,nav,.noprint{display:none!important}
+  body.yaz main{display:none!important}
+  body.yaz #cikti{display:block!important}
+  body{font-size:12px}
+}
+</style>
+</head>
+<body>
+
+<header><h1>Sinek Tuzağı Kontrol</h1><span id="net">•</span></header>
+
+<nav>
+  <button class="on" data-t="kontrol">Kontrol</button>
+  <button data-t="kroki">Kroki</button>
+  <button data-t="onay">Onay<span class="rozet" id="roz" style="display:none">0</span></button>
+  <button data-t="gecmis">Geçmiş</button>
+  <button data-t="ayar">Ayarlar</button>
+</nav>
+
+<main>
+  <!-- KONTROL -->
+  <section id="v-kontrol">
+    <div id="sezon"></div>
+    <div class="bar">
+      <div class="stat"><b id="s-late">0</b><span>Gecikmiş</span></div>
+      <div class="stat"><b id="s-due">0</b><span>Bugün</span></div>
+      <div class="stat"><b id="s-ok">0</b><span>Güncel</span></div>
+      <div class="stat"><b id="s-bad">0</b><span>Sorunlu</span></div>
+    </div>
+    <div class="bar">
+      <input class="in" id="ara" placeholder="Kod veya bölge ara" style="flex:1;min-width:130px">
+      <button class="btn sec sm" style="width:auto" id="fbtn"
+        onclick="sadeceVadeli=!sadeceVadeli;cizListe()">Sadece yapılacaklar</button>
+    </div>
+    <button class="btn sec sm" style="margin-bottom:10px" onclick="gunSonu()">Gün sonu özetini paylaş</button>
+    <div class="grid" id="liste"></div>
+  </section>
+
+  <!-- KROKİ -->
+  <section id="v-kroki" hidden>
+    <div id="kroki-uyari"></div>
+    <div class="bar noprint" id="kroki-arac" style="display:none">
+      <select class="in" id="k-sec" style="flex:1;min-width:150px"></select>
+      <button class="btn sec sm" style="width:auto" id="k-mod" onclick="yerlesModu()">Yerleştir</button>
+    </div>
+    <div class="krokibox" id="krokibox"></div>
+  </section>
+
+  <!-- ONAY -->
+  <section id="v-onay" hidden>
+    <div class="tip">Hasarlı bulunan veya yeri değişmiş tuzaklar burada birikir. Yönetici onaylayana kadar açık kalır.</div>
+    <div id="onaylist"></div>
+    <h4 style="margin:18px 0 8px">Son kapatılanlar</h4>
+    <div id="kapalilist"></div>
+  </section>
+
+  <!-- GEÇMİŞ -->
+  <section id="v-gecmis" hidden>
+    <div class="bar">
+      <input class="in" id="g-kod" placeholder="Tuzak kodu (boş = hepsi)" style="flex:1;min-width:140px">
+      <input class="in" id="g-gun" type="number" value="30" style="width:88px">
+    </div>
+    <div class="bar">
+      <button class="btn sec sm" onclick="cizGecmis()">Listele</button>
+      <button class="btn sec sm" onclick="csv()">CSV indir</button>
+    </div>
+    <div class="gorev" style="margin-bottom:12px">
+      <b>Sarf ve denetim</b>
+      <div class="bar" style="margin:8px 0 0">
+        <input class="in" id="ay-sec" type="month" style="flex:1;min-width:150px">
+        <button class="btn sec sm" style="width:auto" onclick="sarfHesap()">Sarf özeti</button>
+      </div>
+      <div id="sarf"></div>
+      <button class="btn sec sm" style="margin-top:8px" onclick="denetimPaketi()">Aylık denetim paketi (PDF)</button>
+    </div>
+    <div id="gecmis"></div>
+  </section>
+
+  <!-- AYARLAR -->
+  <section id="v-ayar" hidden>
+    <div class="tip">Her iş için ayrı periyot ve ayrı aylar. Ayı kapalı olan iş o ay sorulmaz, gecikme saymaz.</div>
+    <div class="row"><label>Bu telefonun kullanıcısı</label>
+      <div class="bar" style="margin:0">
+        <b id="a-cihaz" style="flex:1;font-size:15px">—</b>
+        <button class="btn sec sm" style="width:auto" onclick="cihazAta(true)">Değiştir</button>
+      </div></div>
+    <div class="row"><label>Personel listesi — her satıra bir ad</label>
+      <textarea class="in" id="a-kisiler" rows="5"></textarea></div>
+    <div id="a-gorevler"></div>
+    <div class="row">
+      <label>Sarf hesabı — bir eklemede kullanılan miktar</label>
+      <div class="bar">
+        <input class="in" id="a-mamagr" type="text" inputmode="numeric" placeholder="Mama gr" style="flex:1">
+        <input class="in" id="a-suml" type="text" inputmode="numeric" placeholder="Su ml" style="flex:1">
+      </div>
+    </div>
+    <div class="row">
+      <label>Tuzak listesi — her satır: KOD | Bölge</label>
+      <textarea class="in" id="a-liste" rows="10"></textarea>
+    </div>
+    <div class="row">
+      <label>Yerleşim krokisi (fabrika planı fotoğrafı)</label>
+      <input class="in" id="a-kroki" type="file" accept="image/*">
+    </div>
+    <div class="row"><label>Otomatik sinek sayımı</label>
+      <div class="bar" style="margin:0">
+        <input class="in" id="a-delta" type="text" inputmode="numeric" placeholder="Hassasiyet" style="flex:1">
+        <input class="in" id="a-amin" type="text" inputmode="numeric" placeholder="En küçük leke" style="flex:1">
+        <input class="in" id="a-amax" type="text" inputmode="numeric" placeholder="En büyük leke" style="flex:1">
+      </div>
+      <div class="bar" style="margin:8px 0 0">
+        <input class="in" id="a-orta" type="text" inputmode="numeric" placeholder="Orta eşiği" style="flex:1">
+        <input class="in" id="a-yuksek" type="text" inputmode="numeric" placeholder="Yüksek eşiği" style="flex:1">
+      </div>
+      <small style="display:block;color:var(--muted);margin-top:6px">Hassasiyet düşerse daha çok leke sayılır (varsayılan 38). Sayı orta eşiğin altındaysa Düşük, yüksek eşiğin üstündeyse Yüksek seçilir.</small></div>
+    <div class="row"><label>Cihazlar — yazma izni</label>
+      <div id="cihazlist"></div></div>
+    <div class="row"><label>Yedekleme (fotoğraflar hariç)</label>
+      <div class="bar" style="margin:0">
+        <button class="btn sec sm" style="flex:1" onclick="yedekAl(false)">Şimdi yedek al</button>
+        <button class="btn sec sm" style="flex:1" onclick="yedekIndir()">Yedeği indir</button>
+      </div>
+      <select class="in" id="yedek-sec" style="margin-top:8px"></select>
+      <button class="btn sec sm" style="margin-top:8px" onclick="yedekGeriYukle()">Seçili yedekten tuzak listesi + ayarları geri yükle</button>
+      <small id="yedek-not" style="display:block;color:var(--muted);margin-top:6px"></small></div>
+    <div class="row"><label>Yönetici PIN</label>
+      <input class="in" id="a-pin" type="password" inputmode="numeric" placeholder="PIN"></div>
+    <div class="row"><button class="btn" onclick="ayarKaydet()">Ayarları kaydet</button></div>
+    <div class="row"><button class="btn sec" onclick="qrYazdir()">QR etiketlerini yazdır</button></div>
+    <div class="row"><small style="color:var(--muted)">Doküman No: FR-02-034 · Yayın: 01.09.2026 · Rev: 0</small></div>
+  </section>
+</main>
+
+<!-- KONTROL FORMU -->
+<div class="sheet" id="form">
+  <div class="top"><b id="f-baslik">—</b><button class="x" onclick="kapat()">Kapat</button></div>
+  <div class="row"><label>Kontrol tarihi</label><input class="in" id="f-tarih" type="date"></div>
+  <div id="f-uyari"></div>
+  <div id="f-gorevler"></div>
+  <div class="row" id="r-foto"><label>Tuzak fotoğrafı (zorunlu — o anda çekilir)</label>
+    <button class="btn sec" onclick="kameraAc()">Fotoğrafı çek</button>
+    <input type="file" id="f-dosya" accept="image/*" capture="environment" style="display:none">
+    <img id="foto" alt=""></div>
+  <div class="row" id="r-yogunluk" style="display:none">
+    <label id="y-etiket">Sinek yoğunluğu</label>
+    <div class="opt" id="y-opt">
+      <button data-v="DUSUK">Düşük</button>
+      <button data-v="ORTA">Orta</button>
+      <button data-v="YUKSEK">Yüksek</button></div>
+    <small style="display:block;color:var(--muted);margin-top:6px">Fotoğraftan otomatik tahmin edilir; yanlışsa elle düzelt.</small></div>
+  <div class="row"><label>Açıklama</label><textarea class="in" id="f-aciklama" rows="3"></textarea></div>
+  <div class="row"><label>İşlemi gerçekleştiren</label>
+    <b id="f-personel" style="font-size:16px">—</b>
+    <small style="display:block;color:var(--muted);margin-top:4px">Bu telefona atanmış kullanıcı. Değiştirmek: Ayarlar.</small></div>
+  <div class="row" id="r-kaydet"><button class="btn" id="f-kaydet" onclick="kaydet()">Kontrolü kaydet</button></div>
+  <div class="row" id="f-son"></div>
+</div>
+
+<!-- KAMERA -->
+<div class="sheet" id="kamera">
+  <div class="top"><b>Tuzak fotoğrafı</b><button class="x" onclick="kameraKapat()">Kapat</button></div>
+  <video id="kam-video" playsinline autoplay muted style="width:100%;background:#000;display:block"></video>
+  <div class="row"><button class="btn" id="kam-cek" onclick="kameraCek()">Çek</button></div>
+  <div class="row" id="kam-not"><small style="color:var(--muted)">Fotoğraf çekildiği an tuzak kodu, tarih, saat, personel ve cihaz koduyla damgalanır. Galeriden seçim yapılamaz.</small></div>
+</div>
+
+<!-- CİHAZ ATAMA -->
+<div class="sheet" id="atama">
+  <div class="top"><b>Bu telefon kime ait?</b></div>
+  <div class="row"><label>Personel seç</label><select class="in" id="at-sec"></select></div>
+  <div class="row"><label>Listede yoksa yaz</label><input class="in" id="at-yeni" placeholder="Ad Soyad"></div>
+  <div class="row"><button class="btn" onclick="atamaKaydet()">Bu telefona ata</button></div>
+  <div class="row"><small style="color:var(--muted)">Bundan sonra her kayıtta işlemi yapan olarak bu ad ve cihaz kodu yazılır. Telefon el değiştirirse Ayarlar > Değiştir (PIN ister).</small></div>
+</div>
+
+<div id="cikti"></div>
+<div class="toast" id="toast"></div>
+
+<script src="https://cdn.jsdelivr.net/npm/qrcodejs@1.0.0/qrcode.min.js"></script>
+<script>
+/* ---------- BAĞLANTI ---------- */
+const DB = "https://tank-takip-default-rtdb.firebaseio.com";
+// Firebase Console > Proje ayarları > Web API anahtarı. Boş bırakılırsa uygulama
+// eski haliyle (kimlik doğrulamasız, herkese açık) çalışır.
+const API_KEY = "";
+const N_NOKTA="sineklik_nokta_v1", N_KAYIT="sineklik_kayit_v1",
+      N_FOTO="sineklik_foto_v1",   N_CONF="sineklik_conf_v1",
+      N_KROKI="sineklik_kroki_v1", N_CIHAZ="sineklik_cihaz_v1",
+      N_YEDEK="sineklik_yedek_v1";
+const PIN = "2026";
+const AY = ["Oca","Şub","Mar","Nis","May","Haz","Tem","Ağu","Eyl","Eki","Kas","Ara"];
+
+const GOREV = [
+  {k:"mama",  ad:"Mama / yem",        a:"UYGUN", b:"Eklendi",    bv:"EKLENDI",    yap:"EKLENDI"},
+  {k:"su",    ad:"Şekerli su",        a:"UYGUN", b:"Eklendi",    bv:"EKLENDI",    yap:"EKLENDI"},
+  {k:"sinek", ad:"Sinekleri boşaltma",a:"UYGUN", b:"Boşaltıldı", bv:"BOSALTILDI", yap:"BOSALTILDI"},
+  {k:"hasar", ad:"Hasar kontrolü",    a:"SAGLAM",b:"Hasarlı",    bv:"HASARLI",    yap:"*", kotu:"HASARLI"},
+  {k:"konum", ad:"Konum kontrolü",    a:"EVET",  b:"Hayır",      bv:"HAYIR",      yap:"*", kotu:"HAYIR"}
+];
+const VARSAYILAN = {
+  mama:{periyot:3,aylar:[4,5,6,7,8,9,10]}, su:{periyot:3,aylar:[4,5,6,7,8,9,10]},
+  sinek:{periyot:7,aylar:[4,5,6,7,8,9,10]},
+  hasar:{periyot:7,aylar:[1,2,3,4,5,6,7,8,9,10,11,12]},
+  konum:{periyot:7,aylar:[1,2,3,4,5,6,7,8,9,10,11,12]},
+  sarf:{mamaGr:50, suMl:200}, personeller:[],
+  sayim:{delta:38, min:3, max:150, orta:10, yuksek:40}
+};
+function cihazId(){
+  let i = localStorage.getItem("cihazId");
+  if(!i){ i = "C-"+Math.random().toString(36).slice(2,6).toUpperCase(); localStorage.setItem("cihazId",i); }
+  return i;
+}
+const CIHAZ = cihazId();
+let kullanici = localStorage.getItem("kullanici") || "";
+
+let noktalar=[], kayitlar=[], conf=JSON.parse(JSON.stringify(VARSAYILAN)),
+    kroki=null, aktif=null, fotoData=null, sadeceVadeli=false, yerles=false, yonetici=false,
+    qrKod=null, manuel=false, fotoKaynak="", sinekSayisi=null, yogunluk="DUSUK", yogElle=false;
+
+const $ = s => document.querySelector(s);
+const bugun = () => new Date().toISOString().slice(0,10);
+const buAy = () => new Date().getMonth()+1;
+const gunFark = d => Math.floor((new Date(bugun())-new Date(d))/86400000);
+const ETK = {UYGUN:"Uygun",EKLENDI:"Eklendi",BOSALTILDI:"Boşaltıldı",
+             SAGLAM:"Sağlam",HASARLI:"Hasarlı",EVET:"Evet",HAYIR:"Hayır"};
+const etk = v => ETK[v]||v||"—";
+function toast(m){const t=$("#toast");t.textContent=m;t.style.display="block";
+  clearTimeout(t._i);t._i=setTimeout(()=>t.style.display="none",2600);}
+function pinIste(){
+  if(yonetici) return true;
+  const g = prompt("Yönetici PIN");
+  if(g===PIN){ yonetici=true; return true; }
+  toast("PIN hatalı."); return false;
+}
+let idToken=null, tokenTs=0, uid=localStorage.getItem("uid")||null, cihazKaydi=null;
+async function girisYap(){
+  if(!API_KEY) return null;
+  const rt = localStorage.getItem("refreshToken");
+  if(rt){
+    const r = await fetch("https://securetoken.googleapis.com/v1/token?key="+API_KEY,
+      {method:"POST",headers:{"Content-Type":"application/json"},
+       body:JSON.stringify({grant_type:"refresh_token", refresh_token:rt})});
+    if(r.ok){ const d = await r.json();
+      idToken=d.id_token; uid=d.user_id; tokenTs=Date.now();
+      localStorage.setItem("uid",uid); return idToken; }
+  }
+  const r2 = await fetch("https://identitytoolkit.googleapis.com/v1/accounts:signUp?key="+API_KEY,
+    {method:"POST",headers:{"Content-Type":"application/json"},
+     body:JSON.stringify({returnSecureToken:true})});
+  if(!r2.ok) throw new Error("Anonim giriş açık değil");
+  const d = await r2.json();
+  idToken=d.idToken; uid=d.localId; tokenTs=Date.now();
+  localStorage.setItem("refreshToken", d.refreshToken); localStorage.setItem("uid", uid);
+  return idToken;
+}
+async function token(){
+  if(!API_KEY) return null;
+  if(!idToken || Date.now()-tokenTs > 50*60*1000) await girisYap();
+  return idToken;
+}
+async function api(node, method="GET", body){
+  const t = await token();
+  const r = await fetch(DB+"/"+node+".json"+(t?"?auth="+t:""),
+    {method,headers:{"Content-Type":"application/json"},
+     body: body!==undefined?JSON.stringify(body):undefined});
+  if(!r.ok) throw new Error("DB "+r.status);
+  return r.json();
+}
+const yaziIzni = () => !API_KEY || !!(cihazKaydi && cihazKaydi.onay);
+const yoneticiCihaz = () => !API_KEY || !!(cihazKaydi && cihazKaydi.rol==="yonetici");
+
+async function cihazKontrol(){
+  if(!API_KEY){ cihazKaydi = null; return; }
+  let hepsi = null;
+  try{ hepsi = await api(N_CIHAZ); }catch(e){ return; }
+  cihazKaydi = (hepsi && uid) ? hepsi[uid] : null;
+  if(!cihazKaydi && (!hepsi || !Object.keys(hepsi).length)){
+    cihazKaydi = {ad: kullanici||"Yönetici", cihaz:CIHAZ, onay:true, rol:"yonetici", tarih:bugun()};
+    try{ await api(N_CIHAZ+"/"+uid,"PUT",cihazKaydi); }catch(e){ cihazKaydi=null; }
+  }
+  durumYaz();
+}
+function durumYaz(){
+  if(!API_KEY) return;
+  $("#net").textContent = yaziIzni() ? (yoneticiCihaz()?"Yönetici":"Bulut") : "Onay bekliyor";
+}
+async function cihazlariCiz(){
+  const kutu = $("#cihazlist");
+  if(!API_KEY){ kutu.innerHTML = '<small style="color:var(--muted)">Kimlik doğrulama kapalı: dosyadaki API_KEY satırı boş. Doldurulmadan Firebase kuralları cihaz bazlı izin veremez.</small>'; return; }
+  let hepsi = {};
+  try{ hepsi = await api(N_CIHAZ) || {}; }catch(e){ kutu.innerHTML='<small style="color:var(--dan)">Cihaz listesi okunamadı.</small>'; return; }
+  const satir = Object.entries(hepsi).map(([k,v])=>`
+    <div class="rec"><div class="h"><span>${v.ad||"—"}</span><span>${v.cihaz||""}</span></div>
+      <div class="m">${v.onay?"Yazma izni var":"Onay bekliyor"}${v.rol==="yonetici"?" · yönetici":""} · ${v.tarih||""}
+        ${k===uid?" · bu telefon":""}</div>
+      ${yoneticiCihaz()&&k!==uid ? `<div class="bar" style="margin:8px 0 0">
+        <button class="btn sec sm" style="flex:1" onclick="cihazIzin('${k}',${v.onay?"false":"true"})">${v.onay?"İzni kaldır":"Onayla"}</button>
+        <button class="btn sec sm" style="flex:1" onclick="cihazRol('${k}','${v.rol==="yonetici"?"personel":"yonetici"}')">${v.rol==="yonetici"?"Personel yap":"Yönetici yap"}</button>
+      </div>` : ""}</div>`).join("");
+  kutu.innerHTML = satir || '<small style="color:var(--muted)">Kayıtlı cihaz yok.</small>';
+}
+async function cihazIzin(k, deger){
+  if(!pinIste()) return;
+  try{ await api(N_CIHAZ+"/"+k+"/onay","PUT", deger==="true"||deger===true); toast("Güncellendi."); }
+  catch(e){ toast("Yazılamadı — yetkin olmayabilir."); }
+  cihazlariCiz();
+}
+async function cihazRol(k, rol){
+  if(!pinIste()) return;
+  try{ await api(N_CIHAZ+"/"+k+"/rol","PUT", rol); toast("Rol güncellendi."); }
+  catch(e){ toast("Yazılamadı — yetkin olmayabilir."); }
+  cihazlariCiz();
+}
+/* ---------- OTOMATİK SİNEK SAYIMI ----------
+   Küçültülmüş görüntü griye çevrilir, 16x16 bloklarla yerel arka plan
+   (aydınlatma farkını yok etmek için) çıkarılır, arka plandan belirgin
+   koyu pikseller işaretlenir, bitişik lekeler gruplanır ve sinek
+   büyüklüğündeki gruplar sayılır. */
+function sinekSay(kaynak){
+  try{
+    const max=480, o=Math.min(1, max/kaynak.width);
+    const w=Math.max(1,Math.round(kaynak.width*o)), h=Math.max(1,Math.round(kaynak.height*o));
+    const k=document.createElement("canvas"); k.width=w; k.height=h;
+    const x=k.getContext("2d"); x.drawImage(kaynak,0,0,w,h);
+    const d=x.getImageData(0,0,w,h).data;
+    const gri=new Uint8Array(w*h);
+    for(let i=0,p=0;i<gri.length;i++,p+=4)
+      gri[i]=(d[p]*0.299 + d[p+1]*0.587 + d[p+2]*0.114)|0;
+
+    const B=16, bw=Math.ceil(w/B), bh=Math.ceil(h/B);
+    const top=new Float64Array(bw*bh), ad=new Float64Array(bw*bh);
+    for(let y=0;y<h;y++) for(let xx=0;xx<w;xx++){
+      const b=((y/B)|0)*bw + ((xx/B)|0); top[b]+=gri[y*w+xx]; ad[b]++;
+    }
+    for(let i=0;i<top.length;i++) top[i] = ad[i] ? top[i]/ad[i] : 0;
+
+    const S=conf.sayim, mask=new Uint8Array(w*h);
+    for(let y=0;y<h;y++) for(let xx=0;xx<w;xx++){
+      const b=((y/B)|0)*bw + ((xx/B)|0);
+      if(top[b] - gri[y*w+xx] > S.delta) mask[y*w+xx]=1;
+    }
+
+    const gez=new Int32Array(w*h), gor=new Uint8Array(w*h);
+    let sayi=0;
+    for(let p=0;p<mask.length;p++){
+      if(!mask[p] || gor[p]) continue;
+      let bas=0, son=0, alan=0;
+      gez[son++]=p; gor[p]=1;
+      while(bas<son){
+        const q=gez[bas++]; alan++;
+        const qy=(q/w)|0, qx=q-qy*w;
+        for(let dy=-1;dy<=1;dy++) for(let dx=-1;dx<=1;dx++){
+          const ny=qy+dy, nx=qx+dx;
+          if(ny<0||nx<0||ny>=h||nx>=w) continue;
+          const r=ny*w+nx;
+          if(mask[r] && !gor[r]){ gor[r]=1; gez[son++]=r; }
+        }
+      }
+      if(alan>=S.min && alan<=S.max) sayi++;
+    }
+    return sayi;
+  }catch(e){ return null; }
+}
+function seviye(sayi){
+  if(sayi===null) return null;
+  return sayi >= conf.sayim.yuksek ? "YUKSEK" : (sayi >= conf.sayim.orta ? "ORTA" : "DUSUK");
+}
+const YOG = {DUSUK:"Düşük", ORTA:"Orta", YUKSEK:"Yüksek"};
+function yogunlukKur(sayi){
+  sinekSayisi = sayi; yogElle = false;
+  const sv = seviye(sayi) || "DUSUK";
+  secYog(sv, false);
+  $("#r-yogunluk").style.display = "";
+  $("#y-etiket").textContent = sayi===null
+    ? "Sinek yoğunluğu (otomatik sayım yapılamadı)"
+    : "Sinek yoğunluğu — otomatik sayım: yaklaşık "+sayi+" sinek";
+}
+function secYog(v, elle=true){
+  yogunluk = v;
+  if(elle) yogElle = true;
+  $("#y-opt").querySelectorAll("button").forEach(b=>b.classList.toggle("sel", b.dataset.v===v));
+}
+function ortakIsle(c){
+  const sayi = sinekSay(c);
+  damgala(c.getContext("2d"), c.width, c.height);
+  return {url: c.toDataURL("image/jpeg",0.6), sayi};
+}
+
+function damgala(x,w,h){
+  const t = new Date();
+  const s = (aktif||"")+" · "+t.toLocaleDateString("tr-TR")+" "
+    + t.toLocaleTimeString("tr-TR",{hour:"2-digit",minute:"2-digit"})
+    + " · " + (kullanici||"") + " · " + CIHAZ;
+  let p = Math.max(11, Math.round(w*0.034));
+  x.textBaseline = "bottom";
+  do { x.font = "bold "+p+"px system-ui, Arial"; p -= 1; }
+  while (p > 9 && x.measureText(s).width > w - 10);
+  const yh = p*1.9;
+  x.fillStyle = "rgba(0,0,0,.6)"; x.fillRect(0, h-yh, w, yh);
+  x.fillStyle = "#fff"; x.fillText(s, 6, h - yh*0.25);
+}
+function kucult(dosya, max, kal, damga){
+  return new Promise(res=>{
+    const fr = new FileReader();
+    fr.onload = () => { const img = new Image();
+      img.onload = () => {
+        const o = Math.min(1, max/Math.max(img.width,img.height));
+        const c = document.createElement("canvas");
+        c.width = img.width*o; c.height = img.height*o;
+        c.getContext("2d").drawImage(img,0,0,c.width,c.height);
+        if(damga) return res(ortakIsle(c));
+        res({url:c.toDataURL("image/jpeg",kal), sayi:null});
+      };
+      img.src = fr.result; };
+    fr.readAsDataURL(dosya);
+  });
+}
+
+/* ---------- KAMERA ---------- */
+let kamStream = null, sonYol = "DOSYA";
+function hazirBekle(v, sn=6){
+  return new Promise(res=>{
+    if(v.videoWidth) return res(true);
+    let n = 0;
+    const i = setInterval(()=>{
+      if(v.videoWidth || ++n > sn*10){ clearInterval(i); res(!!v.videoWidth); }
+    },100);
+  });
+}
+function kamNot(html){ $("#kam-not").innerHTML = html; }
+const YEDEK_BTN = '<button class="btn sec sm" style="margin-top:8px" onclick="telefonKamera()">Telefon kamerasıyla çek</button>'
+  + '<button class="btn sec sm" style="margin-top:8px" onclick="dosyadanYukle()">Yönetici: dosyadan yükle</button>';
+function kamHata(mesaj){
+  const btn = $("#kam-cek");
+  btn.textContent = "Çek"; btn.disabled = true;
+  kamNot('<small style="color:var(--dan)">'+mesaj+'</small>'+YEDEK_BTN);
+}
+async function kameraAc(){
+  kamNot('<small style="color:var(--muted)">Fotoğraf çekildiği an tuzak kodu, tarih, saat, personel ve cihaz koduyla damgalanır.</small>');
+  $("#kamera").classList.add("on");
+  const v = $("#kam-video"), btn = $("#kam-cek");
+  btn.disabled = true; btn.textContent = "Kamera hazırlanıyor…";
+  if(window.self !== window.top){
+    kamHata("Önizleme penceresinde kamera kapalıdır. Sayfayı normal tarayıcıda aç ya da telefon kamerasını kullan.");
+    return;
+  }
+  try{
+    if(!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia)
+      throw new Error(location.protocol==="https:" ? "Tarayıcı desteklemiyor" : "Sayfa https değil");
+    kamStream = await Promise.race([
+      navigator.mediaDevices.getUserMedia({video:{facingMode:{ideal:"environment"}, width:{ideal:1280}}, audio:false}),
+      new Promise((_,r)=>setTimeout(()=>r(new Error("Kamera yanıt vermedi")), 8000))
+    ]);
+    v.srcObject = kamStream;
+    v.muted = true; v.setAttribute("playsinline","");
+    try{ await v.play(); }catch(e){}
+    const hazir = await hazirBekle(v);
+    if(!hazir){ kamHata("Görüntü gelmedi. Kamerayı başka bir uygulama kullanıyor olabilir."); return; }
+    btn.textContent = "Çek"; btn.disabled = false;
+  }catch(e){
+    kamHata("Kamera açılamadı ("+(e.name||e.message)+"). Tarayıcı ayarlarından bu siteye kamera izni verebilir ya da telefon kamerasını kullanabilirsin.");
+  }
+}
+function telefonKamera(){ sonYol = "TELEFON"; $("#f-dosya").click(); }
+function kameraKapat(){
+  if(kamStream){ kamStream.getTracks().forEach(t=>t.stop()); kamStream=null; }
+  $("#kam-video").srcObject = null;
+  $("#kamera").classList.remove("on");
+}
+async function kameraCek(){
+  const v = $("#kam-video");
+  if(!kamStream){ toast("Kamera açık değil."); return; }
+  if(!v.videoWidth){
+    toast("Kamera hazırlanıyor…");
+    if(!await hazirBekle(v,4)){ toast("Görüntü alınamadı, kamerayı kapatıp tekrar aç."); return; }
+  }
+  const max=1000, o=Math.min(1, max/Math.max(v.videoWidth, v.videoHeight));
+  const c = document.createElement("canvas");
+  c.width = v.videoWidth*o; c.height = v.videoHeight*o;
+  c.getContext("2d").drawImage(v, 0, 0, c.width, c.height);
+  const r = ortakIsle(c);
+  fotoData = r.url; fotoKaynak = "KAMERA";
+  $("#foto").src = fotoData; $("#foto").style.display = "block";
+  yogunlukKur(r.sayi);
+  kameraKapat();
+}
+function dosyadanYukle(){ if(!pinIste()) return; sonYol = "DOSYA"; $("#f-dosya").click(); }
+
+/* ---------- SEKME ---------- */
+document.querySelectorAll("nav button").forEach(b=>b.onclick=()=>{
+  document.querySelectorAll("nav button").forEach(x=>x.classList.remove("on"));
+  b.classList.add("on");
+  ["kontrol","kroki","onay","gecmis","ayar"].forEach(t=>$("#v-"+t).hidden = t!==b.dataset.t);
+  if(b.dataset.t==="kroki") cizKroki();
+  if(b.dataset.t==="onay") cizOnay();
+  if(b.dataset.t==="gecmis") cizGecmis();
+});
+$("#ara").oninput = cizListe;
+
+/* ---------- YÜKLE ---------- */
+async function basla(){
+  $("#ay-sec").value = bugun().slice(0,7);
+  try{ await girisYap(); }catch(e){ toast("Giriş yapılamadı: "+e.message); }
+  try{
+    const [n,k,c] = await Promise.all([api(N_NOKTA),api(N_KAYIT),api(N_CONF)]);
+    if(c){ GOREV.forEach(g=>{ if(c[g.k]) conf[g.k]=c[g.k]; });
+           if(c.sarf) conf.sarf=c.sarf; if(c.personeller) conf.personeller=c.personeller;
+           if(c.sayim) conf.sayim=c.sayim; }
+    noktalar = n ? Object.values(n).sort((a,b)=>a.kod.localeCompare(b.kod)) : varsayilanNoktalar();
+    if(!n) await api(N_NOKTA,"PUT",Object.fromEntries(noktalar.map(x=>[x.kod,x])));
+    kayitlar = k ? Object.entries(k).map(([id,v])=>({id,...v})) : [];
+    localStorage.setItem("cache",JSON.stringify({noktalar,kayitlar,conf}));
+    $("#net").textContent="Bulut";
+    api(N_KROKI).then(v=>{ kroki=v; }).catch(()=>{});
+  }catch(e){
+    const c = JSON.parse(localStorage.getItem("cache")||"null");
+    if(c){noktalar=c.noktalar;kayitlar=c.kayitlar;conf=c.conf;}
+    else noktalar = varsayilanNoktalar();
+    $("#net").textContent="Çevrimdışı";
+  }
+  $("#a-liste").value = noktalar.map(n=>n.kod+" | "+(n.bolge||"")).join("\n");
+  $("#a-mamagr").value = conf.sarf.mamaGr; $("#a-suml").value = conf.sarf.suMl;
+  $("#a-delta").value=conf.sayim.delta; $("#a-amin").value=conf.sayim.min; $("#a-amax").value=conf.sayim.max;
+  $("#a-orta").value=conf.sayim.orta; $("#a-yuksek").value=conf.sayim.yuksek;
+  cizAyar(); cizCihaz(); cizListe(); rozet(); kuyrukGonder();
+  await cihazKontrol(); durumYaz(); cihazlariCiz(); yedekleriCiz(); yedekKontrol();
+  const t = new URLSearchParams(location.search).get("t");
+  if(t){ const n = noktalar.find(x=>x.kod.toUpperCase()===t.toUpperCase());
+         if(n){ qrKod = n.kod; ac(n.kod); } }
+  if(!kullanici) cihazAta(false);
+}
+
+/* ---------- CİHAZ / KULLANICI ---------- */
+const kisiListesi = () => conf.personeller || [];
+function cizCihaz(){
+  $("#a-cihaz").textContent = kullanici ? kullanici+" · "+CIHAZ : "atanmadı ("+CIHAZ+")";
+  $("#f-personel").textContent = kullanici || "—";
+  $("#a-kisiler").value = kisiListesi().join("\n");
+}
+function cihazAta(degistir){
+  if(degistir && kullanici && !pinIste()) return;
+  $("#at-sec").innerHTML = kisiListesi().map(n=>`<option>${n}</option>`).join("")
+    || '<option value="">— personel listesi boş —</option>';
+  $("#at-yeni").value = "";
+  $("#atama").classList.add("on");
+}
+async function atamaKaydet(){
+  const ad = ($("#at-yeni").value.trim() || $("#at-sec").value || "").trim();
+  if(!ad){ toast("Listeden seç veya adı yaz."); return; }
+  kullanici = ad; localStorage.setItem("kullanici", ad);
+  if(!kisiListesi().includes(ad)){
+    conf.personeller = [...kisiListesi(), ad];
+    try{ await api(N_CONF+"/personeller","PUT",conf.personeller); }catch(e){}
+  }
+  if(API_KEY && uid){
+    try{
+      const mevcut = cihazKaydi || {onay:false, rol:"personel"};
+      cihazKaydi = {ad, cihaz:CIHAZ, onay:!!mevcut.onay, rol:mevcut.rol||"personel", tarih:bugun()};
+      await api(N_CIHAZ+"/"+uid,"PUT",cihazKaydi);
+    }catch(e){}
+    durumYaz(); cihazlariCiz();
+  }
+  $("#atama").classList.remove("on");
+  cizCihaz(); toast(ad+" bu telefona atandı."
+    + (API_KEY && !yaziIzni() ? " Yönetici onayı bekleniyor." : ""));
+}
+function varsayilanNoktalar(){
+  const a=[]; for(let i=1;i<=35;i++) a.push({kod:"ST-"+String(i).padStart(2,"0"),bolge:""}); return a;
+}
+
+/* ---------- VADE ---------- */
+const aktifMi = g => (conf[g.k].aylar||[]).includes(buAy());
+function sonYapim(kod,g){
+  const l = kayitlar.filter(r=>r.k===kod && r[g.k]).sort((a,b)=>b.d.localeCompare(a.d))[0];
+  return l ? l.d : null;
+}
+function sonEkleme(kod,g){
+  if(g.yap==="*") return null;
+  const l = kayitlar.filter(r=>r.k===kod && r[g.k]===g.yap).sort((a,b)=>b.d.localeCompare(a.d))[0];
+  return l ? l.d : null;
+}
+function tuzakDurum(kod){
+  const isler=[];
+  GOREV.forEach(g=>{
+    if(!aktifMi(g)) return;
+    const s=sonYapim(kod,g), per=+conf[g.k].periyot||7, gecen = s?gunFark(s):9999;
+    isler.push({g,gecen,gecikme:gecen-per,son:s});
+  });
+  const sk = kayitlar.filter(r=>r.k===kod).sort((a,b)=>b.d.localeCompare(a.d))[0];
+  const sorun = !!(sk && (sk.hasar==="HASARLI"||sk.konum==="HAYIR") && !sk.on);
+  if(!isler.length) return {sinif:"pas",isler:[],sorun,sezonDisi:true};
+  const en = Math.max(...isler.map(i=>i.gecikme));
+  return {sinif: en>0?"late":(en===0?"due":"ok"), isler, sorun, sezonDisi:false};
+}
+
+/* ---------- LİSTE ---------- */
+function cizListe(){
+  const acik = GOREV.filter(aktifMi).map(g=>g.ad);
+  $("#sezon").innerHTML = acik.length
+    ? `<div class="tip">${AY[buAy()-1]} ayında aktif işler: ${acik.join(", ")}</div>`
+    : `<div class="tip">${AY[buAy()-1]} ayında planlı iş yok — sezon dışı.</div>`;
+  $("#fbtn").style.background = sadeceVadeli ? "var(--acc-soft)" : "";
+  const q = ($("#ara").value||"").toLowerCase();
+  let ok=0,due=0,late=0,bad=0; const kart=[];
+  noktalar.forEach(n=>{
+    const d = tuzakDurum(n.kod);
+    if(d.sinif==="ok")ok++; else if(d.sinif==="due")due++; else if(d.sinif==="late")late++;
+    if(d.sorun)bad++;
+    if(!(n.kod+" "+(n.bolge||"")).toLowerCase().includes(q)) return;
+    if(sadeceVadeli && !(d.sinif==="due"||d.sinif==="late")) return;
+    const hic = !kayitlar.some(r=>r.k===n.kod);
+    const chips = hic ? '<span class="chip l">Hiç kontrol edilmedi</span>'
+      : d.isler.filter(i=>i.gecikme>=0).map(i=>
+        `<span class="chip ${i.gecikme>0?"l":"d"}">${i.g.ad}${
+          i.son ? (i.gecikme>0?" +"+i.gecikme+"g":"") : " · hiç yapılmadı"}</span>`).join("");
+    kart.push(`<button class="card ${d.sinif}" onclick="ac('${n.kod}')">
+      <b>${n.kod}</b><small>${n.bolge||"Bölge girilmedi"}</small>
+      ${d.sezonDisi?'<small>Sezon dışı</small>':(chips||'<small>Tümü güncel</small>')}
+      ${d.sorun?'<small class="flag">Onay bekliyor</small>':''}</button>`);
+  });
+  $("#liste").innerHTML = kart.join("") || '<div class="tip">Gösterilecek tuzak yok.</div>';
+  $("#s-ok").textContent=ok; $("#s-due").textContent=due;
+  $("#s-late").textContent=late; $("#s-bad").textContent=bad;
+}
+
+/* ---------- GÜN SONU ÖZETİ ---------- */
+function gunSonu(){
+  const bg = bugun();
+  const yapilan = [...new Set(kayitlar.filter(r=>r.d===bg).map(r=>r.k))];
+  const gecikmis=[], sorunlu=[];
+  noktalar.forEach(n=>{
+    const d = tuzakDurum(n.kod);
+    if(d.sinif==="late") gecikmis.push(n.kod+" ("+d.isler.filter(i=>i.gecikme>0)
+      .map(i=>i.g.ad+(i.son?" +"+i.gecikme+"g":": hiç yapılmadı")).join(", ")+")");
+    if(d.sorun) sorunlu.push(n.kod);
+  });
+  const m = ["SİNEK TUZAĞI — "+bg.split("-").reverse().join("."),
+    "Bugün kontrol edilen: "+yapilan.length+"/"+noktalar.length,
+    yapilan.length ? yapilan.join(", ") : "—",
+    "", "Gecikmiş: "+(gecikmis.length? gecikmis.length : "yok"),
+    ...gecikmis.map(g=>"• "+g),
+    "", "Onay bekleyen sorunlu tuzak: "+(sorunlu.length? sorunlu.join(", ") : "yok")].join("\n");
+  if(navigator.share) navigator.share({text:m}).catch(()=>{});
+  else if(navigator.clipboard){ navigator.clipboard.writeText(m); toast("Özet kopyalandı, WhatsApp'a yapıştır."); }
+  else window.open("https://wa.me/?text="+encodeURIComponent(m));
+}
+
+/* ---------- KROKİ ---------- */
+async function cizKroki(){
+  if(kroki===null){ try{ kroki = await api(N_KROKI); }catch(e){} }
+  const box = $("#krokibox");
+  if(!kroki){
+    $("#kroki-uyari").innerHTML = '<div class="tip">Kroki yüklenmemiş. Ayarlar sekmesinden fabrika planı fotoğrafını yükle, sonra buradan tuzakları plan üzerine yerleştir.</div>';
+    $("#kroki-arac").style.display="none"; box.innerHTML=""; return;
+  }
+  const yok = noktalar.filter(n=>n.x==null).length;
+  $("#kroki-uyari").innerHTML = yok
+    ? `<div class="tip">${yok} tuzak henüz plana yerleştirilmedi. "Yerleştir"e bas, listeden tuzağı seç, plan üzerinde yerine dokun.</div>`
+    : '<div class="tip">Renkler kontrol durumunu gösterir. Noktaya dokununca kontrol formu açılır.</div>';
+  $("#kroki-arac").style.display="flex";
+  $("#k-sec").innerHTML = noktalar.map(n=>
+    `<option value="${n.kod}">${n.kod}${n.x==null?" — yerleşmemiş":""}${n.bolge?" · "+n.bolge:""}</option>`).join("");
+  box.innerHTML = `<img src="${kroki}" id="krokiimg" alt="Yerleşim krokisi">` +
+    noktalar.filter(n=>n.x!=null).map(n=>{
+      const d = tuzakDurum(n.kod);
+      return `<div class="nokta n-${d.sinif}" style="left:${n.x}%;top:${n.y}%"
+        onclick="noktaTik(event,'${n.kod}')">${n.kod.replace(/^ST-?/,"")}</div>`;
+    }).join("");
+  $("#krokiimg").onclick = e => {
+    if(!yerles) return;
+    const r = e.target.getBoundingClientRect();
+    const kod = $("#k-sec").value;
+    const n = noktalar.find(x=>x.kod===kod);
+    n.x = +(((e.clientX-r.left)/r.width)*100).toFixed(2);
+    n.y = +(((e.clientY-r.top)/r.height)*100).toFixed(2);
+    api(N_NOKTA+"/"+kod,"PUT",n).catch(()=>toast("Buluta yazılamadı."));
+    const i = [...$("#k-sec").options].findIndex(o=>o.value===kod);
+    if(i<$("#k-sec").options.length-1) $("#k-sec").selectedIndex = i+1;
+    cizKroki(); $("#k-mod").style.background = "var(--acc-soft)";
+    toast(kod+" yerleştirildi.");
+  };
+}
+function noktaTik(e,kod){ e.stopPropagation(); if(!yerles) ac(kod); }
+function yerlesModu(){
+  if(!yerles && !pinIste()) return;
+  yerles = !yerles;
+  $("#k-mod").textContent = yerles ? "Bitir" : "Yerleştir";
+  $("#k-mod").style.background = yerles ? "var(--acc-soft)" : "";
+  toast(yerles ? "Tuzağı seç, plan üzerinde yerine dokun." : "Yerleştirme kapandı.");
+}
+
+/* ---------- ONAY ---------- */
+const sorunlular = () => kayitlar.filter(r=>(r.hasar==="HASARLI"||r.konum==="HAYIR"))
+  .sort((a,b)=>(b.d+b.t).localeCompare(a.d+a.t));
+function rozet(){
+  const n = sorunlular().filter(r=>!r.on).length;
+  const el = $("#roz"); el.textContent = n; el.style.display = n ? "inline-block" : "none";
+}
+function cizOnay(){
+  const acik = sorunlular().filter(r=>!r.on), kapali = sorunlular().filter(r=>r.on).slice(0,10);
+  $("#onaylist").innerHTML = acik.length ? acik.map(r=>`
+    <div class="rec sor">
+      <div class="h"><span>${r.k}</span><span>${r.d}</span></div>
+      <div class="m">${r.hasar==="HASARLI"?"Hasarlı. ":""}${r.konum==="HAYIR"?"Konumu uygun değil. ":""}
+      ${r.ac?"<br>Açıklama: "+r.ac:""}<br>Bildiren: ${r.p||"—"}</div>
+      <button class="btn sm" style="margin-top:8px" onclick="onayla('${r.id}')">Onayla / kapat</button>
+    </div>`).join("") : '<div class="tip">Bekleyen sorun yok.</div>';
+  $("#kapalilist").innerHTML = kapali.length ? kapali.map(r=>`
+    <div class="rec"><div class="h"><span>${r.k}</span><span>${r.d}</span></div>
+      <div class="m">Kapatan: ${r.on.p} · ${r.on.d}${r.on.not?"<br>"+r.on.not:""}</div></div>`).join("")
+    : '<div class="tip">Henüz kapatılmış kayıt yok.</div>';
+}
+async function onayla(id){
+  if(!pinIste()) return;
+  const not = prompt("Yapılan işlem / not (isteğe bağlı)") || "";
+  const r = kayitlar.find(x=>x.id===id);
+  r.on = {p: kullanici || "Yönetici", d: bugun(), not};
+  try{ await api(N_KAYIT+"/"+id,"PATCH",{on:r.on}); toast("Kapatıldı."); }
+  catch(e){ toast("Buluta yazılamadı."); }
+  cizOnay(); rozet(); cizListe();
+}
+
+/* ---------- FORM ---------- */
+function ac(kod){
+  aktif=kod; fotoData=null;
+  const n = noktalar.find(x=>x.kod===kod);
+  $("#f-baslik").textContent = kod + (n&&n.bolge?" — "+n.bolge:"");
+  $("#f-tarih").value = bugun();
+  $("#f-aciklama").value=""; $("#f-dosya").value=""; $("#foto").style.display="none";
+  fotoKaynak = ""; sinekSayisi = null; yogunluk = "DUSUK"; yogElle = false;
+  $("#r-yogunluk").style.display = "none";
+  const d = tuzakDurum(kod);
+  $("#f-gorevler").innerHTML = GOREV.map(g=>{
+    const acikMi = aktifMi(g), i = d.isler.find(x=>x.g.k===g.k), vade = i && i.gecikme>=0;
+    const ek = sonEkleme(kod,g);
+    const not = !acikMi ? "Bu ay planlı değil"
+      : (i.son ? "Son bakılan: "+i.son+" ("+i.gecen+" gün önce)"+(g.yap!=="*"
+          ? " · son "+g.b.toLowerCase()+": "+(ek||"hiç") : "")
+        : "Kayıt yok");
+    return `<div class="row ${vade?"vade":""} ${acikMi?"":"disi"}">
+      <label>${g.ad} — ${not}${vade?" · bugün yapılmalı":""}</label>
+      <div class="opt" data-f="${g.k}">
+        <button data-v="${g.a}">${etk(g.a)}</button>
+        <button data-v="${g.bv}" class="${g.kotu?"bad":""}">${g.b}</button></div></div>`;
+  }).join("");
+  document.querySelectorAll("#f-gorevler .opt").forEach(o=>{
+    o.querySelectorAll("button").forEach(b=>b.onclick=()=>sec(o.dataset.f,b.dataset.v));
+    sec(o.dataset.f, o.querySelector("button").dataset.v);
+  });
+  const sk = kayitlar.filter(r=>r.k===kod).sort((a,b)=>b.d.localeCompare(a.d))[0];
+  $("#f-son").innerHTML = `<small style="color:var(--muted)">${sk
+    ? "Son kontrol: "+sk.d+" — "+(sk.p||"?")+(sk.ac?" · "+sk.ac:"") : "Bu tuzak için ilk kayıt."}</small>`;
+  manuel = false;
+  kayitModu();
+  $("#form").classList.add("on");
+}
+function kayitModu(){
+  const izin = (qrKod===aktif) || manuel;
+  $("#r-foto").style.display = izin ? "" : "none";
+  $("#r-kaydet").style.display = izin ? "" : "none";
+  $("#f-uyari").innerHTML = izin
+    ? (manuel ? `<div class="row" style="background:var(--warn-soft)">
+        <b>Elle kayıt — yönetici</b>
+        <small style="display:block;color:var(--muted);margin-top:4px">QR okutulmadığı için kayıt "ELLE" işaretiyle saklanacak.</small></div>` : "")
+    : `<div class="row" style="background:var(--warn-soft)">
+        <b>Kayıt için QR okutulmalı</b>
+        <small style="display:block;color:var(--muted);margin:4px 0 8px">Bu ekran sadece görüntüleme. Tuzağın üzerindeki QR kodu telefon kamerasıyla okut, form kayıt modunda açılsın.</small>
+        <button class="btn sec sm" onclick="elleKayit()">Yönetici: elle kayıt aç</button></div>`;
+}
+function elleKayit(){ if(!pinIste()) return; manuel = true; kayitModu(); }
+document.querySelectorAll("#y-opt button").forEach(b=> b.onclick = () => secYog(b.dataset.v));
+function kapat(){
+  kameraKapat();
+  $("#form").classList.remove("on");
+  try{ history.replaceState({},"",location.pathname); }catch(e){}
+}
+function sec(f,v){
+  const o = document.querySelector('#f-gorevler .opt[data-f="'+f+'"]');
+  o.querySelectorAll("button").forEach(b=>b.classList.toggle("sel", b.dataset.v===v));
+  o.dataset.val = v;
+}
+$("#f-dosya").onchange = async e => {
+  const d = e.target.files[0]; if(!d) return;
+  e.target.value = "";
+  if(Date.now() - d.lastModified > 10*60*1000){
+    toast("Bu fotoğraf az önce çekilmemiş. Tuzağın önünde anlık çekim yapılmalı."); return; }
+  const r = await kucult(d,1000,0.6,true);
+  fotoData = r.url; fotoKaynak = sonYol;
+  $("#foto").src=fotoData; $("#foto").style.display="block";
+  yogunlukKur(r.sayi);
+  $("#kamera").classList.remove("on");
+};
+async function kaydet(){
+  if(!yaziIzni()){ toast("Bu telefonun yazma izni yok. Yönetici, Ayarlar > Cihazlar bölümünden onaylamalı."); return; }
+  if(qrKod!==aktif && !manuel){ toast("Kayıt için tuzağın QR kodunu okut."); return; }
+  if(!fotoData){ toast("Önce tuzağın fotoğrafını çek."); return; }
+  if(!kullanici){ toast("Önce bu telefona personel ata."); cihazAta(false); return; }
+  const rec = {k:aktif,d:$("#f-tarih").value,t:Date.now(),
+    ac:$("#f-aciklama").value.trim(), p:kullanici, c:CIHAZ, q: manuel?"ELLE":"QR", fk: fotoKaynak, f:1,
+    yog: yogunluk, ys: sinekSayisi, ye: yogElle?1:0};
+  GOREV.forEach(g=> rec[g.k] = document.querySelector('#f-gorevler .opt[data-f="'+g.k+'"]').dataset.val);
+  $("#f-kaydet").disabled=true;
+  try{
+    const r = await api(N_KAYIT,"POST",rec);
+    await api(N_FOTO+"/"+r.name,"PUT",fotoData);
+    kayitlar.push({id:r.name,...rec}); toast("Kaydedildi — "+aktif);
+  }catch(e){
+    const q = JSON.parse(localStorage.getItem("kuyruk")||"[]");
+    q.push({rec,foto:fotoData}); localStorage.setItem("kuyruk",JSON.stringify(q));
+    kayitlar.push({id:"local"+Date.now(),...rec});
+    toast("İnternet yok — telefonda bekliyor, bağlanınca gönderilecek.");
+  }
+  $("#f-kaydet").disabled=false;
+  qrKod = null; manuel = false;
+  localStorage.setItem("cache",JSON.stringify({noktalar,kayitlar,conf}));
+  cizListe(); rozet(); kapat();
+}
+async function kuyrukGonder(){
+  const q = JSON.parse(localStorage.getItem("kuyruk")||"[]");
+  if(!q.length) return;
+  const kalan=[];
+  for(const it of q){
+    try{ const r=await api(N_KAYIT,"POST",it.rec); await api(N_FOTO+"/"+r.name,"PUT",it.foto); }
+    catch(e){ kalan.push(it); }
+  }
+  localStorage.setItem("kuyruk",JSON.stringify(kalan));
+  if(!kalan.length) toast(q.length+" bekleyen kayıt gönderildi.");
+}
+window.addEventListener("online", kuyrukGonder);
+
+/* ---------- GEÇMİŞ / SARF / DENETİM ---------- */
+function filtre(){
+  const kod = ($("#g-kod").value||"").trim().toUpperCase(), gun = +$("#g-gun").value||30;
+  return kayitlar.filter(r=>(!kod||r.k===kod) && gunFark(r.d)<=gun)
+                 .sort((a,b)=>(b.d+b.t).localeCompare(a.d+a.t));
+}
+function cizGecmis(){
+  const v = filtre();
+  $("#gecmis").innerHTML = v.length ? v.map(r=>`
+    <div class="rec ${(r.hasar==="HASARLI"||r.konum==="HAYIR")?"sor":""}">
+      <div class="h"><span>${r.k}</span><span>${r.d}</span></div>
+      <div class="m">${GOREV.map(g=>g.ad+": "+etk(r[g.k])).join(" · ")}<br>
+      ${r.yog?"Yoğunluk: "+(YOG[r.yog]||r.yog)+(r.ys!=null?" (sayım ~"+r.ys+(r.ye?", elle düzeltildi":"")+")":"")+"<br>":""}
+      ${r.ac?"Açıklama: "+r.ac+"<br>":""}İşlemi yapan: ${r.p||"—"}${r.c?" · "+r.c:""}${
+        r.q==="ELLE"?' · <b style="color:var(--dan)">ELLE KAYIT</b>':""}${
+        r.fk==="DOSYA"?' · <b style="color:var(--dan)">DOSYADAN FOTOĞRAF</b>':(r.fk==="TELEFON"?" · telefon kamerası":"")}
+      ${r.on?"<br>Onay: "+r.on.p+" ("+r.on.d+")":""}</div>
+      <button class="btn sec sm" style="margin-top:8px"
+        onclick="fotoGoster('${r.id}',this)">Fotoğrafı gör</button></div>`).join("")
+    : '<div class="tip">Bu aralıkta kayıt yok.</div>';
+}
+async function fotoGoster(id,btn){
+  btn.disabled=true; btn.textContent="Yükleniyor…";
+  try{ const d = await api(N_FOTO+"/"+id);
+    if(!d){ btn.textContent="Fotoğraf bulunamadı"; return; }
+    const img=new Image(); img.src=d; btn.replaceWith(img);
+  }catch(e){ btn.textContent="Açılamadı"; btn.disabled=false; }
+}
+function csv(){
+  const v = filtre();
+  const b = ["Tarih;Kod;"+GOREV.map(g=>g.ad).join(";")+";Yogunluk;Sayim;Aciklama;Personel;Cihaz;Kayit;Fotograf;Onay"];
+  v.forEach(r=>b.push([r.d,r.k,...GOREV.map(g=>etk(r[g.k])),
+    YOG[r.yog]||"",r.ys!=null?r.ys:"",
+    (r.ac||"").replace(/;/g,","),r.p||"",r.c||"",r.q||"QR",r.fk||"KAMERA",r.on?r.on.p+" "+r.on.d:""].join(";")));
+  const a=document.createElement("a");
+  a.href=URL.createObjectURL(new Blob(["\ufeff"+b.join("\n")],{type:"text/csv"}));
+  a.download="sinek_tuzagi_"+bugun()+".csv"; a.click();
+}
+const ayKayit = () => { const ay = $("#ay-sec").value || bugun().slice(0,7);
+  return kayitlar.filter(r=>r.d.startsWith(ay)).sort((a,b)=>(a.d+a.t).localeCompare(b.d+b.t)); };
+
+function sarfHesap(){
+  const v = ayKayit(), ay = $("#ay-sec").value || bugun().slice(0,7);
+  const mama = v.filter(r=>r.mama==="EKLENDI").length;
+  const su   = v.filter(r=>r.su==="EKLENDI").length;
+  const bos  = v.filter(r=>r.sinek==="BOSALTILDI").length;
+  const has  = v.filter(r=>r.hasar==="HASARLI").length;
+  const kon  = v.filter(r=>r.konum==="HAYIR").length;
+  const kisi = {}; v.forEach(r=>kisi[r.p||"—"]=(kisi[r.p||"—"]||0)+1);
+  $("#sarf").innerHTML = `<div class="tip" style="margin-top:8px">
+    <b>${ay}</b> — toplam ${v.length} kontrol kaydı, ${new Set(v.map(r=>r.k)).size} farklı tuzak<br>
+    Mama eklemesi: ${mama} kez ≈ ${(mama*(+conf.sarf.mamaGr||0)/1000).toFixed(2)} kg<br>
+    Şekerli su: ${su} kez ≈ ${(su*(+conf.sarf.suMl||0)/1000).toFixed(1)} L<br>
+    Boşaltma: ${bos} · Hasarlı bulunan: ${has} · Konum sorunu: ${kon}<br>
+    Personel: ${Object.entries(kisi).map(([k,n])=>k+" ("+n+")").join(", ")||"—"}
+    ${yogunlukOzet(v)}</div>`;
+}
+function yogunlukOzet(v){
+  const s = v.filter(r=>r.ys!=null);
+  if(!s.length) return "";
+  const t = {};
+  s.forEach(r=>{ (t[r.k]=t[r.k]||[]).push(r.ys); });
+  const ort = Object.entries(t).map(([k,a])=>[k, a.reduce((x,y)=>x+y,0)/a.length])
+    .sort((a,b)=>b[1]-a[1]);
+  const gen = (s.reduce((x,r)=>x+r.ys,0)/s.length).toFixed(1);
+  return "<br>Ortalama sinek sayımı: "+gen+"<br>En yoğun noktalar: "
+    + ort.slice(0,3).map(([k,o])=>k+" ("+o.toFixed(0)+")").join(", ");
+}
+async function denetimPaketi(){
+  const v = ayKayit(), ay = $("#ay-sec").value || bugun().slice(0,7);
+  if(!v.length){ toast("Bu ayda kayıt yok."); return; }
+  if(v.length>250){ toast("Çok fazla kayıt var, ayı daralt."); return; }
+  toast("Fotoğraflar hazırlanıyor… ("+v.length+")");
+  const fotolar = {};
+  for(let i=0;i<v.length;i+=5){
+    await Promise.all(v.slice(i,i+5).map(async r=>{
+      try{ fotolar[r.id] = await api(N_FOTO+"/"+r.id); }catch(e){}
+    }));
+  }
+  $("#cikti").innerHTML = `
+    <h3 style="text-align:center;margin:6px 0">SİNEK TUZAĞI KONTROL FORMU — ${ay}</h3>
+    <div style="font-size:11px;text-align:right">Doküman No: FR-02-034 · Yayın Tarihi: 01.09.2026 · Rev. No: 0</div>
+    <table><tr><th>Tarih</th><th>Tuzak</th>${GOREV.map(g=>"<th>"+g.ad+"</th>").join("")}
+    <th>Yoğunluk</th><th>Açıklama</th><th>İşlemi Gerçekleştiren</th><th>Onay</th></tr>
+    ${v.map(r=>`<tr><td>${r.d}</td><td>${r.k}</td>
+      ${GOREV.map(g=>"<td>"+etk(r[g.k])+"</td>").join("")}
+      <td>${(YOG[r.yog]||"")+(r.ys!=null?" (~"+r.ys+")":"")}</td><td>${r.ac||""}</td><td>${r.p||""}</td><td>${r.on?r.on.p+" "+r.on.d:""}</td></tr>`).join("")}
+    </table>
+    <p style="margin-top:18px">ONAYLAYAN:</p>
+    <h4 style="page-break-before:always">Fotoğraf ekleri — ${ay}</h4>
+    <div class="fotolar">${v.filter(r=>fotolar[r.id]).map(r=>
+      `<figure><img src="${fotolar[r.id]}"><figcaption>${r.k} · ${r.d}</figcaption></figure>`).join("")}</div>`;
+  yaz();
+}
+function qrYazdir(){
+  const kok = location.origin + location.pathname;
+  $("#cikti").innerHTML = '<div class="qrs">' + noktalar.map(n=>
+    `<div class="lbl"><b>${n.kod}</b><small>${n.bolge||"&nbsp;"}</small>
+     <div id="q-${n.kod}"></div><small>Kontrol için okutun</small></div>`).join("") + '</div>';
+  noktalar.forEach(n=>{
+    const box = document.getElementById("q-"+n.kod);
+    if(window.QRCode) new QRCode(box,{text:kok+"?t="+n.kod,width:110,height:110});
+    else box.textContent = kok+"?t="+n.kod;
+  });
+  setTimeout(yaz, 400);
+}
+function yaz(){
+  document.body.classList.add("yaz");
+  $("#cikti").style.display="block";
+  setTimeout(()=>window.print(), 200);
+}
+window.onafterprint = () => { document.body.classList.remove("yaz"); $("#cikti").style.display="none"; };
+
+/* ---------- YEDEKLEME ---------- */
+async function yedekAl(sessiz){
+  const paket = {tarih:new Date().toISOString(), nokta:noktalar, conf,
+                 kayit: kayitlar.filter(r=>!String(r.id).startsWith("local")).map(({id,...r})=>r)};
+  try{
+    await api(N_YEDEK+"/"+bugun(),"PUT",paket);
+    localStorage.setItem("sonYedek", String(Date.now()));
+    const hepsi = await api(N_YEDEK) || {};
+    const k = Object.keys(hepsi).sort();
+    for(const eski of k.slice(0,-4)) await api(N_YEDEK+"/"+eski,"DELETE");
+    if(!sessiz) toast("Yedek alındı: "+bugun());
+    yedekleriCiz();
+  }catch(e){ if(!sessiz) toast("Yedek alınamadı."); }
+}
+async function yedekKontrol(){
+  const son = +(localStorage.getItem("sonYedek")||0);
+  if(!yaziIzni()) return;
+  if(Date.now()-son > 7*86400000) yedekAl(true);
+}
+async function yedekleriCiz(){
+  try{
+    const hepsi = await api(N_YEDEK) || {};
+    const k = Object.keys(hepsi).sort().reverse();
+    $("#yedek-sec").innerHTML = k.map(x=>`<option value="${x}">${x} · ${(hepsi[x].kayit||[]).length} kayıt</option>`).join("")
+      || '<option value="">— yedek yok —</option>';
+    $("#yedek-not").textContent = k.length
+      ? "Son yedek: "+k[0]+" · haftada bir otomatik alınır, son 4 yedek saklanır."
+      : "Henüz yedek alınmadı.";
+  }catch(e){ $("#yedek-not").textContent = "Yedekler okunamadı."; }
+}
+async function yedekIndir(){
+  const t = $("#yedek-sec").value;
+  try{
+    const p = t ? await api(N_YEDEK+"/"+t) : {tarih:new Date().toISOString(), nokta:noktalar, conf,
+      kayit:kayitlar.map(({id,...r})=>r)};
+    const a = document.createElement("a");
+    a.href = URL.createObjectURL(new Blob([JSON.stringify(p,null,1)],{type:"application/json"}));
+    a.download = "sineklik_yedek_"+(t||bugun())+".json"; a.click();
+  }catch(e){ toast("Yedek indirilemedi."); }
+}
+async function yedekGeriYukle(){
+  const t = $("#yedek-sec").value;
+  if(!t){ toast("Yedek seç."); return; }
+  if(!pinIste()) return;
+  if(!confirm(t+" tarihli yedekten tuzak listesi ve ayarlar geri yüklensin mi? Kontrol kayıtlarına dokunulmaz.")) return;
+  try{
+    const p = await api(N_YEDEK+"/"+t);
+    if(p.nokta){ noktalar = p.nokta; await api(N_NOKTA,"PUT",Object.fromEntries(noktalar.map(x=>[x.kod,x]))); }
+    if(p.conf){ conf = p.conf; await api(N_CONF,"PUT",conf); }
+    $("#a-liste").value = noktalar.map(n=>n.kod+" | "+(n.bolge||"")).join("\n");
+    cizAyar(); cizListe(); toast("Geri yüklendi.");
+  }catch(e){ toast("Geri yüklenemedi."); }
+}
+
+/* ---------- AYARLAR ---------- */
+function cizAyar(){
+  $("#a-gorevler").innerHTML = GOREV.map(g=>`
+    <div class="row"><div class="gorev"><b>${g.ad}</b>
+      <div style="display:flex;gap:8px;align-items:center;margin-top:8px">
+        <span style="font-size:13px;color:var(--muted)">Kaç günde bir</span>
+        <input class="in" style="width:90px" type="text" inputmode="numeric"
+          id="p-${g.k}" value="${conf[g.k].periyot}"></div>
+      <div class="aylar" id="ay-${g.k}">${AY.map((a,i)=>
+        `<button data-m="${i+1}" class="${conf[g.k].aylar.includes(i+1)?"on":""}">${a}</button>`).join("")}
+      </div></div></div>`).join("");
+  document.querySelectorAll(".aylar button").forEach(b=>b.onclick=()=>b.classList.toggle("on"));
+}
+$("#a-kroki").onchange = async e => {
+  const d = e.target.files[0]; if(!d) return;
+  if(!pinIste()){ e.target.value=""; return; }
+  toast("Kroki yükleniyor…");
+  kroki = (await kucult(d,1600,0.7,false)).url;
+  try{ await api(N_KROKI,"PUT",kroki); toast("Kroki kaydedildi. Kroki sekmesinden noktaları yerleştir."); }
+  catch(err){ toast("Kroki buluta yazılamadı."); }
+};
+async function ayarKaydet(){
+  if($("#a-pin").value!==PIN && !yonetici){ toast("PIN hatalı."); return; }
+  yonetici = true;
+  GOREV.forEach(g=>{ conf[g.k] = { periyot:+$("#p-"+g.k).value||7,
+    aylar:[...document.querySelectorAll("#ay-"+g.k+" button.on")].map(b=>+b.dataset.m) }; });
+  conf.sarf = {mamaGr:+$("#a-mamagr").value||0, suMl:+$("#a-suml").value||0};
+  conf.personeller = $("#a-kisiler").value.split("\n").map(s=>s.trim()).filter(Boolean);
+  conf.sayim = {delta:+$("#a-delta").value||38, min:+$("#a-amin").value||3, max:+$("#a-amax").value||150,
+                orta:+$("#a-orta").value||10, yuksek:+$("#a-yuksek").value||40};
+  const eski = Object.fromEntries(noktalar.map(n=>[n.kod,n]));
+  noktalar = $("#a-liste").value.split("\n").map(s=>s.trim()).filter(Boolean).map(s=>{
+    const [kod,...r] = s.split("|");
+    const k = kod.trim().toUpperCase();
+    return {kod:k, bolge:r.join("|").trim(), x:eski[k]?eski[k].x:null, y:eski[k]?eski[k].y:null};
+  });
+  cizCihaz();
+  try{
+    await api(N_CONF,"PUT",conf);
+    await api(N_NOKTA,"PUT",Object.fromEntries(noktalar.map(x=>[x.kod,x])));
+    toast("Ayarlar kaydedildi.");
+  }catch(e){ toast("Buluta yazılamadı, internet yok."); }
+  $("#a-pin").value=""; cizListe();
+}
+
+if("serviceWorker" in navigator && location.protocol==="https:")
+  navigator.serviceWorker.register("sw.js").catch(()=>{});
+
+basla();
+</script>
+</body>
+</html>

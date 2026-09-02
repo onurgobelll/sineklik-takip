@@ -1,0 +1,47 @@
+{
+  "rules": {
+    "sineklik_cihaz_v1": {
+      ".read": "auth != null",
+      "$uid": {
+        ".write": "auth != null && ( (auth.uid === $uid && (!data.exists() || newData.child('onay').val() === data.child('onay').val()) && (!data.exists() || newData.child('rol').val() === data.child('rol').val()) && (root.child('sineklik_cihaz_v1').numChildren() === 0 || newData.child('onay').val() === false || data.child('onay').val() === true)) || root.child('sineklik_cihaz_v1').child(auth.uid).child('rol').val() === 'yonetici' )",
+        ".validate": "newData.hasChildren(['ad','cihaz','onay','rol'])"
+      }
+    },
+
+    "sineklik_kayit_v1": {
+      ".read": "auth != null",
+      ".write": "auth != null && root.child('sineklik_cihaz_v1').child(auth.uid).child('onay').val() === true",
+      "$kayit": {
+        ".validate": "newData.hasChildren(['k','d','p'])"
+      }
+    },
+
+    "sineklik_foto_v1": {
+      ".read": "auth != null",
+      ".write": "auth != null && root.child('sineklik_cihaz_v1').child(auth.uid).child('onay').val() === true"
+    },
+
+    "sineklik_nokta_v1": {
+      ".read": "auth != null",
+      ".write": "auth != null && root.child('sineklik_cihaz_v1').child(auth.uid).child('onay').val() === true"
+    },
+
+    "sineklik_conf_v1": {
+      ".read": "auth != null",
+      ".write": "root.child('sineklik_cihaz_v1').child(auth.uid).child('rol').val() === 'yonetici'",
+      "personeller": {
+        ".write": "auth != null"
+      }
+    },
+
+    "sineklik_kroki_v1": {
+      ".read": "auth != null",
+      ".write": "root.child('sineklik_cihaz_v1').child(auth.uid).child('rol').val() === 'yonetici'"
+    },
+
+    "sineklik_yedek_v1": {
+      ".read": "auth != null",
+      ".write": "auth != null && root.child('sineklik_cihaz_v1').child(auth.uid).child('onay').val() === true"
+    }
+  }
+}
