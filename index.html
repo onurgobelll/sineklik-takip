@@ -220,7 +220,13 @@ th,td{border:1px solid #000;padding:3px}
         <button class="btn sec sm" style="width:auto" onclick="cihazAta(true)">Değiştir</button>
       </div></div>
     <div class="row"><label>Personel listesi — her satıra bir ad</label>
-      <textarea class="in" id="a-kisiler" rows="5"></textarea></div>
+      <textarea class="in" id="a-kisiler" rows="5"></textarea>
+      <small style="display:block;color:var(--muted);margin-top:6px">Bu listedeki adı seçen telefon doğrudan kayıt yapabilir. İşten ayrılanı listeden sil — asıl yetki kesme yolu budur.</small></div>
+    <div class="row"><label>Yönetici PIN değiştir</label>
+      <div class="bar" style="margin:0">
+        <input class="in" id="a-yenipin" type="text" inputmode="numeric" placeholder="Yeni PIN" style="flex:1">
+        <button class="btn sec sm" style="width:auto" onclick="pinDegistir()">Kaydet</button>
+      </div></div>
     <div id="a-gorevler"></div>
     <div class="row">
       <label>Sarf hesabı — bir eklemede kullanılan miktar</label>
@@ -339,8 +345,16 @@ const API_KEY = window.SINEKLIK_ANAHTAR || "";
 const N_NOKTA="sineklik_nokta_v1", N_KAYIT="sineklik_kayit_v1",
       N_FOTO="sineklik_foto_v1",   N_CONF="sineklik_conf_v1",
       N_KROKI="sineklik_kroki_v1", N_CIHAZ="sineklik_cihaz_v1",
-      N_YEDEK="sineklik_yedek_v1";
-const PIN = "2026";
+      N_YEDEK="sineklik_yedek_v1", N_PERSONEL="sineklik_personel_v1";
+const PIN_VARSAYILAN = "2026";
+let personelObj = {};                       // { "ad-anahtari": "Ad Soyad" }
+const aktifPin = () => (conf.pin || PIN_VARSAYILAN);
+function adAnahtar(ad){
+  return (ad||"").toLocaleLowerCase("tr")
+    .replace(/ı/g,"i").replace(/ş/g,"s").replace(/ğ/g,"g")
+    .replace(/ü/g,"u").replace(/ö/g,"o").replace(/ç/g,"c")
+    .replace(/[^a-z0-9]+/g,"-").replace(/^-|-$/g,"").slice(0,40);
+}
 const AY = ["Oca","Şub","Mar","Nis","May","Haz","Tem","Ağu","Eyl","Eki","Kas","Ara"];
 
 const GOREV = [
@@ -388,12 +402,22 @@ function pinIste(sonra){
   return false;
 }
 function yoneticiGir(){
-  if($("#y-pin").value.trim() !== PIN){ $("#y-hata").textContent = "PIN hatalı."; return; }
+  if($("#y-pin").value.trim() !== aktifPin()){ $("#y-hata").textContent = "PIN hatalı."; return; }
   yonetici = true;
+  yoneticiCihazYaz();
   $("#yonetici").classList.remove("on");
   yonDurumYaz(); durumYaz(); ayarKilit(); toast("Yönetici girişi yapıldı.");
   const f = bekleyenIslem; bekleyenIslem = null;
   if(f) setTimeout(f, 60);
+}
+async function yoneticiCihazYaz(){
+  if(!API_KEY || !uid) return;
+  try{
+    cihazKaydi = {ad: kullanici || "Yönetici", ak: adAnahtar(kullanici || "yonetici"),
+                  cihaz: CIHAZ, onay: true, rol: "yonetici", tarih: bugun()};
+    await api(N_CIHAZ+"/"+uid,"PUT",cihazKaydi);
+    durumYaz(); cihazlariCiz();
+  }catch(e){ toast("Yönetici yetkisi buluta yazılamadı: "+hataMetni(e)); }
 }
 function yoneticiKapat(){ bekleyenIslem = null; $("#yonetici").classList.remove("on"); }
 function yoneticiButon(){
@@ -487,7 +511,8 @@ async function cihazlariCiz(){
   try{ hepsi = await api(N_CIHAZ) || {}; }catch(e){ kutu.innerHTML='<small style="color:var(--dan)">Cihaz listesi okunamadı.</small>'; return; }
   const satir = Object.entries(hepsi).map(([k,v])=>`
     <div class="rec"><div class="h"><span>${v.ad||"—"}</span><span>${v.cihaz||""}</span></div>
-      <div class="m">${v.onay?"Yazma izni var":"Onay bekliyor"}${v.rol==="yonetici"?" · yönetici":""} · ${v.tarih||""}
+      <div class="m">${v.onay?"Yazma izni var":"Onay bekliyor"}${v.rol==="yonetici"?" · yönetici":""}${
+        v.ak && personelObj[v.ak] ? " · listede kayıtlı" : ""} · ${v.tarih||""}
         ${k===uid?" · bu telefon":""}</div>
       ${yoneticiCihaz()&&k!==uid ? `<div class="bar" style="margin:8px 0 0">
         <button class="btn sec sm" style="flex:1" onclick="cihazIzin('${k}',${v.onay?"false":"true"})">${v.onay?"İzni kaldır":"Onayla"}</button>
@@ -708,10 +733,15 @@ async function basla(){
   $("#ay-sec").value = bugun().slice(0,7);
   try{ await girisYap(); }catch(e){ toast("Giriş yapılamadı: "+e.message); }
   try{
-    const [n,k,c] = await Promise.all([api(N_NOKTA),api(N_KAYIT),api(N_CONF)]);
+    const [n,k,c,pl] = await Promise.all([api(N_NOKTA),api(N_KAYIT),api(N_CONF),
+      api(N_PERSONEL).catch(()=>null)]);
+    personelObj = pl || {};
     if(c){ GOREV.forEach(g=>{ if(c[g.k]) conf[g.k]=c[g.k]; });
            if(c.sarf) conf.sarf=c.sarf; if(c.personeller) conf.personeller=c.personeller;
-           if(c.sayim) conf.sayim=c.sayim; }
+           if(c.sayim) conf.sayim=c.sayim; if(c.pin) conf.pin=c.pin; }
+    if(!Object.keys(personelObj).length && conf.personeller && conf.personeller.length){
+      conf.personeller.forEach(a=>{ personelObj[adAnahtar(a)] = a; });   // eski listeden taşı
+    }
     noktalar = n ? Object.values(n).sort((a,b)=>a.kod.localeCompare(b.kod)) : varsayilanNoktalar();
     if(!n) await api(N_NOKTA,"PUT",Object.fromEntries(noktalar.map(x=>[x.kod,x])));
     kayitlar = k ? Object.entries(k).map(([id,v])=>({id,...v})) : [];
@@ -738,7 +768,7 @@ async function basla(){
 }
 
 /* ---------- CİHAZ / KULLANICI ---------- */
-const kisiListesi = () => conf.personeller || [];
+const kisiListesi = () => Object.values(personelObj);
 function cizCihaz(){
   $("#a-cihaz").textContent = kullanici ? kullanici+" · "+CIHAZ : "atanmadı ("+CIHAZ+")";
   $("#f-personel").textContent = kullanici || "—";
@@ -755,21 +785,24 @@ async function atamaKaydet(){
   const ad = ($("#at-yeni").value.trim() || $("#at-sec").value || "").trim();
   if(!ad){ toast("Listeden seç veya adı yaz."); return; }
   kullanici = ad; localStorage.setItem("kullanici", ad);
-  if(!kisiListesi().includes(ad)){
-    conf.personeller = [...kisiListesi(), ad];
-    try{ await api(N_CONF+"/personeller","PUT",conf.personeller); }catch(e){}
-  }
+
+  const ak = adAnahtar(ad);
+  const kayitli = !!personelObj[ak];
   if(API_KEY && uid){
     try{
-      const mevcut = cihazKaydi || {onay:false, rol:"personel"};
-      cihazKaydi = {ad, cihaz:CIHAZ, onay:!!mevcut.onay, rol:mevcut.rol||"personel", tarih:bugun()};
+      const mevcut = cihazKaydi || {};
+      cihazKaydi = {ad, ak, cihaz:CIHAZ,
+        onay: kayitli || mevcut.onay === true || yonetici,
+        rol: mevcut.rol || (yonetici ? "yonetici" : "personel"), tarih:bugun()};
       await api(N_CIHAZ+"/"+uid,"PUT",cihazKaydi);
-    }catch(e){}
+    }catch(e){ toast("Cihaz kaydı yazılamadı: "+hataMetni(e)); }
     durumYaz(); cihazlariCiz();
   }
   $("#atama").classList.remove("on");
-  cizCihaz(); toast(ad+" bu telefona atandı."
-    + (API_KEY && !yaziIzni() ? " Yönetici onayı bekleniyor." : ""));
+  cizCihaz();
+  toast(ad+" bu telefona atandı."
+    + (API_KEY && !yaziIzni()
+       ? " Bu ad personel listesinde yok — yönetici eklemeli ya da PIN ile giriş yapılmalı." : ""));
 }
 function varsayilanNoktalar(){
   const a=[]; for(let i=1;i<=35;i++) a.push({kod:"ST-"+String(i).padStart(2,"0"),bolge:""}); return a;
@@ -1269,6 +1302,16 @@ async function yedekGeriYukle(){
   }catch(e){ toast("Geri yüklenemedi."); }
 }
 
+async function pinDegistir(){
+  if(!pinIste(pinDegistir)) return;
+  const y = $("#a-yenipin").value.trim();
+  if(y.length < 4){ toast("PIN en az 4 karakter olmalı."); return; }
+  conf.pin = y;
+  try{ await api(N_CONF+"/pin","PUT",y); $("#a-yenipin").value="";
+       toast("PIN değiştirildi. Diğer cihazlarda da geçerli."); }
+  catch(e){ toast("PIN yazılamadı: "+hataMetni(e)); }
+}
+
 /* ---------- BAĞLANTI TESTİ ---------- */
 async function baglantiTesti(){
   const k = $("#test-sonuc");
@@ -1342,7 +1385,9 @@ async function ayarKaydet(){
   GOREV.forEach(g=>{ conf[g.k] = { periyot:+$("#p-"+g.k).value||7,
     aylar:[...document.querySelectorAll("#ay-"+g.k+" button.on")].map(b=>+b.dataset.m) }; });
   conf.sarf = {mamaGr:+$("#a-mamagr").value||0, suMl:+$("#a-suml").value||0};
-  conf.personeller = $("#a-kisiler").value.split("\n").map(s=>s.trim()).filter(Boolean);
+  const adlar = $("#a-kisiler").value.split("\n").map(s=>s.trim()).filter(Boolean);
+  personelObj = {}; adlar.forEach(a=>{ personelObj[adAnahtar(a)] = a; });
+  conf.personeller = adlar;
   conf.sayim = {delta:+$("#a-delta").value||38, min:+$("#a-amin").value||3, max:+$("#a-amax").value||150,
                 orta:+$("#a-orta").value||10, yuksek:+$("#a-yuksek").value||40};
   const eski = Object.fromEntries(noktalar.map(n=>[n.kod,n]));
@@ -1354,6 +1399,7 @@ async function ayarKaydet(){
   cizCihaz();
   try{
     await api(N_CONF,"PUT",conf);
+    await api(N_PERSONEL,"PUT",personelObj);
     await api(N_NOKTA,"PUT",Object.fromEntries(noktalar.map(x=>[x.kod,x])));
     toast("Ayarlar kaydedildi.");
   }catch(e){ toast("Buluta yazılamadı, internet yok."); }
