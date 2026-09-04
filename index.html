@@ -329,13 +329,13 @@ th,td{border:1px solid #000;padding:3px}
 <div id="cikti"></div>
 <div class="toast" id="toast"></div>
 
+<script src="ayar.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/qrcodejs@1.0.0/qrcode.min.js"></script>
 <script>
 /* ---------- BAĞLANTI ---------- */
-const DB = "https://sineklik-ac0bc-default-rtdb.firebaseio.com";
-// Firebase Console > Proje ayarları > Web API anahtarı. Boş bırakılırsa uygulama
-// eski haliyle (kimlik doğrulamasız, herkese açık) çalışır.
-const API_KEY = "";
+// Adres ve anahtar ayar.js dosyasından okunur — index.html güncellenince silinmez.
+const DB = window.SINEKLIK_DB || "https://sineklik-ac0bc-default-rtdb.firebaseio.com";
+const API_KEY = window.SINEKLIK_ANAHTAR || "";
 const N_NOKTA="sineklik_nokta_v1", N_KAYIT="sineklik_kayit_v1",
       N_FOTO="sineklik_foto_v1",   N_CONF="sineklik_conf_v1",
       N_KROKI="sineklik_kroki_v1", N_CIHAZ="sineklik_cihaz_v1",

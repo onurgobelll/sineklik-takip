@@ -1,10 +1,11 @@
 /* Sinek Tuzağı Kontrol — servis çalışanı
    Uygulama dosyalarını önbelleğe alır (çevrimdışı açılır),
    Firebase ve diğer veri isteklerine karışmaz. */
-const SURUM = "sineklik-v1";
+const SURUM = "sineklik-v2";
 const DOSYALAR = [
   "./",
   "./index.html",
+  "./ayar.js",
   "./manifest.json",
   "./icon-192.png",
   "./icon-512.png",
