@@ -254,6 +254,9 @@ th,td{border:1px solid #000;padding:3px}
         <input class="in" id="a-yuksek" type="text" inputmode="numeric" placeholder="Yüksek eşiği" style="flex:1">
       </div>
       <small style="display:block;color:var(--muted);margin-top:6px">Hassasiyet düşerse daha çok leke sayılır (varsayılan 38). Sayı orta eşiğin altındaysa Düşük, yüksek eşiğin üstündeyse Yüksek seçilir.</small></div>
+    <div class="row"><label>Bu cihaz</label>
+      <button class="btn sec sm" onclick="yoneticiCihazYaz(true)">Bu cihazı yönetici yap</button>
+      <small style="display:block;color:var(--muted);margin-top:6px">PIN ile girdiğin her telefonda bir kez bas: o cihaz kalıcı yönetici olur, cihaz onaylayabilir.</small></div>
     <div class="row"><label>Cihazlar — yazma izni</label>
       <div id="cihazlist"></div></div>
     <div class="row"><label>Yedekleme (fotoğraflar hariç)</label>
@@ -410,13 +413,15 @@ function yoneticiGir(){
   const f = bekleyenIslem; bekleyenIslem = null;
   if(f) setTimeout(f, 60);
 }
-async function yoneticiCihazYaz(){
-  if(!API_KEY || !uid) return;
+async function yoneticiCihazYaz(elle){
+  if(elle && !pinIste(()=>yoneticiCihazYaz(true))) return;
+  if(!API_KEY || !uid){ if(elle) toast("Firebase bağlantısı yok."); return; }
   try{
     cihazKaydi = {ad: kullanici || "Yönetici", ak: adAnahtar(kullanici || "yonetici"),
                   cihaz: CIHAZ, onay: true, rol: "yonetici", tarih: bugun()};
     await api(N_CIHAZ+"/"+uid,"PUT",cihazKaydi);
-    durumYaz(); cihazlariCiz();
+    durumYaz(); cizCihaz(); cihazlariCiz();
+    if(elle) toast("Bu cihaz artık yönetici.");
   }catch(e){ toast("Yönetici yetkisi buluta yazılamadı: "+hataMetni(e)); }
 }
 function yoneticiKapat(){ bekleyenIslem = null; $("#yonetici").classList.remove("on"); }
@@ -514,22 +519,30 @@ async function cihazlariCiz(){
       <div class="m">${v.onay?"Yazma izni var":"Onay bekliyor"}${v.rol==="yonetici"?" · yönetici":""}${
         v.ak && personelObj[v.ak] ? " · listede kayıtlı" : ""} · ${v.tarih||""}
         ${k===uid?" · bu telefon":""}</div>
-      ${yoneticiCihaz()&&k!==uid ? `<div class="bar" style="margin:8px 0 0">
+      ${(yonetici||yoneticiCihaz())&&k!==uid ? `<div class="bar" style="margin:8px 0 0">
         <button class="btn sec sm" style="flex:1" onclick="cihazIzin('${k}',${v.onay?"false":"true"})">${v.onay?"İzni kaldır":"Onayla"}</button>
         <button class="btn sec sm" style="flex:1" onclick="cihazRol('${k}','${v.rol==="yonetici"?"personel":"yonetici"}')">${v.rol==="yonetici"?"Personel yap":"Yönetici yap"}</button>
+        <button class="btn sec sm" style="width:auto" onclick="cihazSil('${k}','${(v.ad||"").replace(/'/g,"")}')">Sil</button>
       </div>` : ""}</div>`).join("");
   kutu.innerHTML = satir || '<small style="color:var(--muted)">Kayıtlı cihaz yok.</small>';
 }
 async function cihazIzin(k, deger){
   if(!pinIste(()=>cihazIzin(k,deger))) return;
   try{ await api(N_CIHAZ+"/"+k+"/onay","PUT", deger==="true"||deger===true); toast("Güncellendi."); }
-  catch(e){ toast("Yazılamadı — yetkin olmayabilir."); }
+  catch(e){ toast("Onay yazılamadı: "+hataMetni(e)+" Ayarlar > Bu cihazı yönetici yap."); }
   cihazlariCiz();
 }
 async function cihazRol(k, rol){
   if(!pinIste(()=>cihazRol(k,rol))) return;
   try{ await api(N_CIHAZ+"/"+k+"/rol","PUT", rol); toast("Rol güncellendi."); }
-  catch(e){ toast("Yazılamadı — yetkin olmayabilir."); }
+  catch(e){ toast("Rol yazılamadı: "+hataMetni(e)); }
+  cihazlariCiz();
+}
+async function cihazSil(k, ad){
+  if(!pinIste(()=>cihazSil(k,ad))) return;
+  if(!confirm((ad||"Bu cihaz")+" kaydı silinsin mi? Cihaz uygulamayı açarsa yeniden kaydolur.")) return;
+  try{ await api(N_CIHAZ+"/"+k,"DELETE"); toast("Cihaz kaydı silindi."); }
+  catch(e){ toast("Silinemedi: "+hataMetni(e)); }
   cihazlariCiz();
 }
 /* ---------- OTOMATİK SİNEK SAYIMI ----------
